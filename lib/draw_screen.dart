@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -8,118 +9,167 @@ class Draw extends StatefulWidget {
 }
 
 class _DrawState extends State<Draw> {
-  Color color = Colors.black;
+  Color selectedColor = Colors.black;
   double strokeWidth = 3.0;
   List<DrawingPoints> points = List();
   bool showBottomList = false;
   double opacity = 1.0;
+  StrokeCap strokeCap = (Platform.isAndroid) ? StrokeCap.butt : StrokeCap.round;
   SelectedMode selectedMode = SelectedMode.StrokeWidth;
+  List<Color> colors = [
+    Colors.red,
+    Colors.green,
+    Colors.blue,
+    Colors.amber,
+    Colors.black
+  ];
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        bottomNavigationBar: Container(
-            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4.0),
-                color: Colors.greenAccent),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50.0),
+                  color: Colors.greenAccent),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    IconButton(
-                        icon: Icon(Icons.album),
-                        onPressed: () {
-                          setState(() {
-                            if (selectedMode == SelectedMode.StrokeWidth)
-                              showBottomList = !showBottomList;
-                            selectedMode = SelectedMode.StrokeWidth;
-                          });
-                        }),
-                    IconButton(
-                        icon: Icon(Icons.opacity),
-                        onPressed: () {
-                          setState(() {
-                            if (selectedMode == SelectedMode.Opacity)
-                              showBottomList = !showBottomList;
-                            selectedMode = SelectedMode.Opacity;
-                          });
-                        }),
-                    IconButton(
-                        icon: Icon(Icons.color_lens),
-                        onPressed: () {
-                          setState(() {
-                            showBottomList = !showBottomList;
-                            color = Colors.yellow;
-                          });
-                        }),
-                    IconButton(
-                        icon: Icon(Icons.color_lens),
-                        onPressed: () {
-                          setState(() {
-                            showBottomList = !showBottomList;
-                            points.clear();
-                          });
-                        }),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        IconButton(
+                            icon: Icon(Icons.album),
+                            onPressed: () {
+                              setState(() {
+                                if (selectedMode == SelectedMode.StrokeWidth)
+                                  showBottomList = !showBottomList;
+                                selectedMode = SelectedMode.StrokeWidth;
+                              });
+                            }),
+                        IconButton(
+                            icon: Icon(Icons.opacity),
+                            onPressed: () {
+                              setState(() {
+                                if (selectedMode == SelectedMode.Opacity)
+                                  showBottomList = !showBottomList;
+                                selectedMode = SelectedMode.Opacity;
+                              });
+                            }),
+                        IconButton(
+                            icon: Icon(Icons.color_lens),
+                            onPressed: () {
+                              setState(() {
+                                if (selectedMode == SelectedMode.Color)
+                                  showBottomList = !showBottomList;
+                                selectedMode = SelectedMode.Color;
+                              });
+                            }),
+                        IconButton(
+                            icon: Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                showBottomList = false;
+                                points.clear();
+                              });
+                            }),
+                      ],
+                    ),
+                    Visibility(
+                      child: (selectedMode == SelectedMode.Color)
+                          ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: getColorList(),
+                      )
+                          : Slider(
+                          value: (selectedMode == SelectedMode.StrokeWidth)
+                              ? strokeWidth
+                              : opacity,
+                          max: (selectedMode == SelectedMode.StrokeWidth)
+                              ? 50.0
+                              : 1.0,
+                          min: 0.0,
+                          onChanged: (val) {
+                            setState(() {
+                              if (selectedMode == SelectedMode.StrokeWidth)
+                                strokeWidth = val;
+                              else
+                                opacity = val;
+                            });
+                          }),
+                      visible: showBottomList,
+                    ),
                   ],
                 ),
-                Visibility(
-                  child: Slider(
-                      value: (selectedMode == SelectedMode.StrokeWidth)
-                          ? strokeWidth
-                          : opacity,
-                      max: (selectedMode == SelectedMode.StrokeWidth)
-                          ? 50.0
-                          : 1.0,
-                      min: 0.0,
-                      onChanged: (val) {
-                        setState(() {
-                          if (selectedMode == SelectedMode.StrokeWidth)
-                            strokeWidth = val;
-                          else
-                            opacity = val;
-                        });
-                      }),
-                  visible: showBottomList,
-                )
-              ],
-            )),
-        body: Container(
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                RenderBox renderBox = context.findRenderObject();
-                points.add(DrawingPoints(
-                    points: renderBox.globalToLocal(details.globalPosition),
-                    paint: Paint()
-                      ..color = color.withOpacity(opacity)
-                      ..strokeWidth = strokeWidth));
-              });
-            },
-            onPanStart: (details) {
-              setState(() {
-                RenderBox renderBox = context.findRenderObject();
-                points.add(DrawingPoints(
-                    points: renderBox.globalToLocal(details.globalPosition),
-                    paint: Paint()
-                      ..color = color.withOpacity(opacity)
-                      ..strokeWidth = strokeWidth));
-              });
-            },
-            onPanEnd: (details) {
-              setState(() {
-                points.add(null);
-              });
-            },
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: DrawingPainter(
-                pointsList: points,
-              ),
+              )),
+        ),
+        body: GestureDetector(
+          onPanUpdate: (details) {
+            setState(() {
+              RenderBox renderBox = context.findRenderObject();
+              points.add(DrawingPoints(
+                  points: renderBox.globalToLocal(details.globalPosition),
+                  paint: Paint()
+                    ..strokeCap = strokeCap
+                    ..isAntiAlias = true
+                    ..color = selectedColor.withOpacity(opacity)
+                    ..strokeWidth = strokeWidth));
+            });
+          },
+          onPanStart: (details) {
+            setState(() {
+              RenderBox renderBox = context.findRenderObject();
+              points.add(DrawingPoints(
+                  points: renderBox.globalToLocal(details.globalPosition),
+                  paint: Paint()
+                    ..strokeCap = strokeCap
+                    ..isAntiAlias = true
+                    ..color = selectedColor.withOpacity(opacity)
+                    ..strokeWidth = strokeWidth));
+            });
+          },
+          onPanEnd: (details) {
+            setState(() {
+              points.add(null);
+            });
+            setState(() {});
+          },
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: DrawingPainter(
+              pointsList: points,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  getColorList() {
+    List<Widget> listWidget = List();
+    for (Color color in colors) {
+      listWidget.add(colorCircle(color));
+    }
+    return listWidget;
+  }
+
+  Widget colorCircle(Color color) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedColor = color;
+        });
+      },
+      child: ClipOval(
+        child: Container(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          height: 36,
+          width: 36,
+          color: color,
         ),
       ),
     );
@@ -156,4 +206,5 @@ class DrawingPoints {
   DrawingPoints({this.points, this.paint});
 }
 
-enum SelectedMode { StrokeWidth, Opacity }
+enum SelectedMode { StrokeWidth, Opacity, Color }
+
