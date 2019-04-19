@@ -1,4 +1,13 @@
 import 'package:draw/draw_screen.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(Draw());
+void main() => runApp(DrawApp());
+
+class DrawApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Draw(),
+    );
+  }
+}
