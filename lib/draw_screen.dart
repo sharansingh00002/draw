@@ -137,7 +137,6 @@ class _DrawState extends State<Draw> {
           setState(() {
             points.add(null);
           });
-          setState(() {});
         },
         child: CustomPaint(
           size: Size.infinite,
