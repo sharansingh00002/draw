@@ -29,7 +29,7 @@ class _DrawState extends State<Draw> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(20.0),
         child: Container(
             padding: const EdgeInsets.only(left: 8.0, right: 8.0),
             decoration: BoxDecoration(
@@ -94,6 +94,10 @@ class _DrawState extends State<Draw> {
                                 ? 50.0
                                 : 1.0,
                             min: 0.0,
+                            activeColor:
+                                (selectedMode == SelectedMode.StrokeWidth)
+                                    ? selectedColor
+                                    : selectedColor.withOpacity(opacity),
                             onChanged: (val) {
                               setState(() {
                                 if (selectedMode == SelectedMode.StrokeWidth)
@@ -124,13 +128,15 @@ class _DrawState extends State<Draw> {
         onPanStart: (details) {
           setState(() {
             RenderBox renderBox = context.findRenderObject();
-            points.add(DrawingPoints(
-                points: renderBox.globalToLocal(details.globalPosition),
-                paint: Paint()
-                  ..strokeCap = strokeCap
-                  ..isAntiAlias = true
-                  ..color = selectedColor.withOpacity(opacity)
-                  ..strokeWidth = strokeWidth));
+            points.add(
+              DrawingPoints(
+                  points: renderBox.globalToLocal(details.globalPosition),
+                  paint: Paint()
+                    ..strokeCap = strokeCap
+                    ..isAntiAlias = true
+                    ..color = selectedColor.withOpacity(opacity)
+                    ..strokeWidth = strokeWidth),
+            );
           });
         },
         onPanEnd: (details) {
